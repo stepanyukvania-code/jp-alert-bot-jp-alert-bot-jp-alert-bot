@@ -1,8 +1,9 @@
+
 import json
 
 from scanner.mercari import search
 from services.telegram import send
-from data.store import load_queries
+from store import load_queries
 
 SEEN_FILE = "data/seen.json"
 
