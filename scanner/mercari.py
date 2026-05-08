@@ -5,7 +5,15 @@ def search(keyword, limit=20):
     results = []
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-blink-features=AutomationControlled"
+            ]
+        )
+
         page = browser.new_page()
 
         page.goto(
@@ -13,29 +21,30 @@ def search(keyword, limit=20):
             timeout=60000
         )
 
-        page.wait_for_timeout(7000)
+        page.wait_for_timeout(10000)
 
-        cards = page.query_selector_all("[data-testid='item-cell']")
+        html = page.content()
 
-        for c in cards:
+        if "Just a moment" in html or len(html) < 5000:
+            print("BLOCKED OR EMPTY PAGE")
+            return []
+
+        links = page.query_selector_all("a")
+
+        for a in links:
             try:
-                title_el = c.query_selector("a")
-                if not title_el:
+                href = a.get_attribute("href")
+                text = (a.inner_text() or "").strip()
+
+                if not href or not text:
                     continue
 
-                title = title_el.inner_text().strip()
-                href = title_el.get_attribute("href")
-
-                price_el = c.query_selector("span")
-                price = price_el.inner_text().strip() if price_el else ""
-
-                if not title or not href:
+                if "/item/" not in href:
                     continue
 
                 results.append({
-                    "title": title,
-                    "url": "https://www.mercari.com" + href,
-                    "price": price
+                    "title": text,
+                    "url": "https://www.mercari.com" + href
                 })
 
                 if len(results) >= limit:
