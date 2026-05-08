@@ -1,13 +1,14 @@
+from scanner.mercari import search
+from services.telegram import send
+
 print("BOT START")
 
-try:
-    from services.telegram import send
-    print("IMPORT OK")
+results = search("iphone")
 
-    send("TEST FROM GITHUB")
-    print("SEND DONE")
+print("RESULTS:", results)
 
-except Exception as e:
-    print("ERROR:", e)
+for r in results:
+    text = f"{r.get('title')} - {r.get('price')}"
+    send(text)
 
 print("BOT END")
