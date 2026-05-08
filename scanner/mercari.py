@@ -1,44 +1,32 @@
 import requests
 import re
-
-
-BASE_URL = "https://www.mercari.com/jp/search/"
+import json
 
 
 def search(keyword, limit=20):
-    try:
-        url = f"{BASE_URL}?keyword={requests.utils.quote(keyword)}"
+    url = f"https://www.mercari.com/jp/search/?keyword={keyword}"
 
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-        r = requests.get(url, headers=headers, timeout=10)
-        html = r.text
+    r = requests.get(url, headers=headers)
 
-        matches = re.findall(r'/jp/items/([a-zA-Z0-9]+)/', html)
+    html = r.text
 
-        results = []
-        seen = set()
+    # пробуємо витягнути JSON з сторінки
+    match = re.search(r'window\.__INITIAL_STATE__\s*=\s*({.*?});', html)
 
-        for item_id in matches:
-            if item_id in seen:
-                continue
-
-            seen.add(item_id)
-
-            results.append({
-                "id": item_id,
-                "title": keyword,
-                "price": "",
-                "url": f"https://www.mercari.com/jp/items/{item_id}/"
-            })
-
-            if len(results) >= limit:
-                break
-
-        return results
-
-    except Exception as e:
-        print("MERCARI ERROR:", e)
+    if not match:
+        print("NO DATA FOUND")
         return []
+
+    try:
+        data = json.loads(match.group(1))
+    except:
+        print("JSON PARSE ERROR")
+        return []
+
+    print("DATA FOUND")
+
+    return []
