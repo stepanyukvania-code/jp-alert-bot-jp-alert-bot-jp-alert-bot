@@ -2,17 +2,9 @@ import json
 
 from scanner.mercari import search
 from services.telegram import send
+from data.store import load_queries
 
-FILE = "data/queries.json"
 SEEN_FILE = "data/seen.json"
-
-
-def load_queries():
-    try:
-        with open(FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except:
-        return []
 
 
 def load_seen():
