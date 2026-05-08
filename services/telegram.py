@@ -1,16 +1,20 @@
 import requests
-from config import TELEGRAM_TOKEN, CHAT_ID
+import os
+
+
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
+
 
 def send(text):
-    try:
-        requests.post(
-            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
-            data={
-                "chat_id": CHAT_ID,
-                "text": text,
-                "disable_web_page_preview": True
-            },
-            timeout=10
-        )
-    except:
-        pass
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+    data = {
+        "chat_id": CHAT_ID,
+        "text": text
+    }
+
+    r = requests.post(url, data=data)
+
+    print("TELEGRAM STATUS:", r.status_code)
+    print("TELEGRAM RESPONSE:", r.text)
