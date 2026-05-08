@@ -1,32 +1,45 @@
-import requests
-import re
-import json
+from playwright.sync_api import sync_playwright
 
 
 def search(keyword, limit=20):
-    url = f"https://www.mercari.com/jp/search/?keyword={keyword}"
+    results = []
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-    r = requests.get(url, headers=headers)
+        page.goto(
+            f"https://www.mercari.com/jp/search/?keyword={keyword}",
+            timeout=60000
+        )
 
-    html = r.text
+        page.wait_for_timeout(5000)
 
-    # пробуємо витягнути JSON з сторінки
-    match = re.search(r'window\.__INITIAL_STATE__\s*=\s*({.*?});', html)
+        cards = page.query_selector_all("a")
 
-    if not match:
-        print("NO DATA FOUND")
-        return []
+        for c in cards:
+            try:
+                text = (c.inner_text() or "").strip()
+                href = c.get_attribute("href")
 
-    try:
-        data = json.loads(match.group(1))
-    except:
-        print("JSON PARSE ERROR")
-        return []
+                if not text or not href:
+                    continue
 
-    print("DATA FOUND")
+                if "mercari" not in href:
+                    continue
 
-    return []
+                results.append({
+                    "title": text,
+                    "url": href,
+                    "price": ""
+                })
+
+                if len(results) >= limit:
+                    break
+
+            except:
+                continue
+
+        browser.close()
+
+    return results
