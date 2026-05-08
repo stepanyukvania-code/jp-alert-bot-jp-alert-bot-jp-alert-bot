@@ -13,25 +13,29 @@ def search(keyword, limit=20):
             timeout=60000
         )
 
-        page.wait_for_timeout(5000)
+        page.wait_for_timeout(7000)
 
-        cards = page.query_selector_all("a")
+        cards = page.query_selector_all("[data-testid='item-cell']")
 
         for c in cards:
             try:
-                text = (c.inner_text() or "").strip()
-                href = c.get_attribute("href")
-
-                if not text or not href:
+                title_el = c.query_selector("a")
+                if not title_el:
                     continue
 
-                if "mercari" not in href:
+                title = title_el.inner_text().strip()
+                href = title_el.get_attribute("href")
+
+                price_el = c.query_selector("span")
+                price = price_el.inner_text().strip() if price_el else ""
+
+                if not title or not href:
                     continue
 
                 results.append({
-                    "title": text,
-                    "url": href,
-                    "price": ""
+                    "title": title,
+                    "url": "https://www.mercari.com" + href,
+                    "price": price
                 })
 
                 if len(results) >= limit:
